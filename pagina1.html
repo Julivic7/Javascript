@@ -6,42 +6,43 @@
 
 <body>
 
-    <h1>INSERTAR FALOPA</h1>
+    <h1>Materias del Istic by Jasa</h1>
 
-   <h2>HOLA ROCIOOOOOOOOOO</h2>
-    <label for="materia1">Materia 1:</label>
-    <input type="number" id="idNumber1" name="idNumber1"><br><br>
+    <form id="materiasIstic">
+        <label for="nombre">Name:</label>
+        <input type="text" id="nombre" name="nombre" required>
+        <br><br>
 
-    <label for="materia2">Materia 2:</label>
-    <input type="number" id="idNumber2" name="idNumber2"><br><br>
+        <label for="cantidadMaterias">Email:</label>
+        <input type="number" id="cantidadMaterias" name="cantidadMaterias" required>
+        <br><br>
 
-    <input type="button" value="Enviar" id="boton" onClick="ValidarMayor()">
-
+        <button type="submit"></button>
+    </form>
 
 <Script>
     //var boton = document.getElementById("boton");
+    // function ValidarMayor(){
 
-    function ValidarMayor(){
-
-    var x = document.getElementById("idNumber1").value;    
-    var y = document.getElementById("idNumber2").value;
+    // var x = document.getElementById("idNumber1").value;    
+    // var y = document.getElementById("idNumber2").value;
     
-    console.log(x,y);
+    // console.log(x,y);
 
-        if((x>0 && x<100)  && ( y>0 && y<100) ){
+    //     if((x>0 && x<100)  && ( y>0 && y<100) ){
             
-            if (x > y){
-                alert("La Materia 1 es mayor a la materia 2");
-            }
-            else if ( y > x ) {
-                alert("La Materia 2 es mayor a la Materia 1");
-            }else{
-                alert("La Materias son iquals");
-            }
-        }else{
-            alert("Las Materias no pueden ser menor a 0 o mayor a 100 ");
-        }      
-    }
+    //         if (x > y){
+    //             alert("La Materia 1 es mayor a la materia 2");
+    //         }
+    //         else if ( y > x ) {
+    //             alert("La Materia 2 es mayor a la Materia 1");
+    //         }else{
+    //             alert("La Materias son iquals");
+    //         }
+    //     }else{
+    //         alert("Las Materias no pueden ser menor a 0 o mayor a 100 ");
+    //     }      
+    // }
 
 </Script>
 
