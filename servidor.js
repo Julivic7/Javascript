@@ -15,7 +15,7 @@ const nuestro_server = http.createServer((req, res) =>{
     //HACER UN SERVIDOR NODE QUE PEGUE ALGUNAS RUTAS 
 });
 
-nuestro_server.listen(3000, () =>{
+nuestro_server.listen(3008, () =>{
     console.log("Corriendo");
 });
 
