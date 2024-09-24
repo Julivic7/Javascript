@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<title>Page Title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materias del Istic</title>
 </head>
-
 <body>
 
     <h1>Materias del Istic by Jasa</h1>
@@ -20,32 +21,34 @@
         <button type="submit">Enviar</button>
     </form>
 
-<Script>
-    var infoMaterias = document.getElementById("materiasIstic");
-        let materias = [];
+    <script>
+        document.getElementById('materiasIstic').addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        function addEntry(nombre, cantidadAlumnos) {            
-            let entry = {
-                nombre: nombre,
-                cantidadAlumnos: cantidadAlumnos
-            };
+            const nombre = document.getElementById('nombre').value;
+            const cantidadAlumnos = document.getElementById('cantidadAlumnos').value;
 
-            // Agregar el objeto a la lista
-            materias.push(entry);
-        }        
-        // Obtener los valores de los campos
-        var nombre = document.getElementById("nombre").value;
-        var cantidadAlumnos = document.getElementById("cantidadAlumnos").value;
-
-        // Agregar la entrada
-        addEntry(nombre, cantidadAlumnos);
-
-        // Mostrar en consola
-         console.log(materias);
-        
-</Script>
+            fetch('http://localhost:5500/pagina1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: nombre,
+                    cantidadAlumnos: cantidadAlumnos
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Éxito:', data);
+                alert(`Materia añadida: ${data.nombre}, Alumnos: ${data.cantidadAlumnos}`);
+                document.getElementById('materiasIstic').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 
 </body>
-
-
 </html>
