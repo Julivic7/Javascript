@@ -1,55 +1,64 @@
-const http = require('http');
-const url = require('url');
-const fs = require('fs');
+// server.js
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const Materia = require('./models/materia');
+const sequelize = require('./database'); // Asegúrate de que la ruta sea correcta
 const path = require('path');
 
-let materias = []; // Lista para almacenar las materias
+const app = express();
+const PORT = 5500;
 
-const server = http.createServer((req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public'))); // Asegúrate de que 'public' contenga tu index.html y otros archivos estáticos
 
-    const parsedUrl = url.parse(req.url, true);
-    const id = parsedUrl.pathname.split('/')[2]; // Extrae el ID de la URL si está presente
+// Sincronizar la base de datos
+sequelize.sync()
+    .then(() => {
+        console.log('Base de datos sincronizada.');
+    })
+    .catch(err => {
+        console.error('Error al sincronizar la base de datos:', err);
+    });
 
-    if (req.method === 'OPTIONS') {
-        res.writeHead(204);
-        res.end();
-        return;
+// Rutas
+
+// Servir la página HTML principal
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Obtener todas las materias
+app.get('/ver-registros', async (req, res) => {
+    try {
+        const materias = await Materia.findAll();
+        res.json(materias);
+    } catch (error) {
+        console.error('Error al obtener materias:', error);
+        res.status(500).json({ error: 'Error al obtener materias' });
     }
+});
 
-    // Servir la página HTML principal
-    if (req.method === 'GET' && parsedUrl.pathname === '/') {
-        const filePath = path.join(__dirname, 'index.html');
-        fs.readFile(filePath, (err, data) => {
-            if (err) {
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end('Error al cargar la página');
-            } else {
-                res.writeHead(200, { 'Content-Type': 'text/html' });
-                res.end(data);
-            }
-        });
-
-    // Obtener el listado de todas las materias
-    } else if (req.method === 'GET' && parsedUrl.pathname === '/ver-registros') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(materias));
-
-    // Obtener información de una materia en particular (GET/id)
-    } else if (req.method === 'GET' && parsedUrl.pathname.startsWith('/ver-registros/') && id) {
-        const materia = materias.find(m => m.id === parseInt(id));
+// Obtener una materia por ID
+app.get('/ver-registros/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const materia = await Materia.findByPk(id);
         if (materia) {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(materia));
+            res.json(materia);
         } else {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Materia no encontrada' }));
+            res.status(404).json({ error: 'Materia no encontrada' });
         }
+    } catch (error) {
+        console.error('Error al obtener la materia:', error);
+        res.status(500).json({ error: 'Error al obtener la materia' });
+    }
+});
 
     // Manejar el registro de materias (POST)
-    } else if (req.method === 'POST' && parsedUrl.pathname === '/agregar-registro') {
+    else if (req.method === 'POST' && parsedUrl.pathname === '/agregar-registro') {
         let body = '';
 
         req.on('data', chunk => {
