@@ -2,8 +2,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const Materia = require('./models/materia');
-const sequelize = require('./database');
+const Materia = require('./models/materias');
+const sequelize = require('./db');
 const path = require('path');
 
 const app = express();
@@ -25,7 +25,7 @@ sequelize.sync()
 
 
 
-// Servir la página HTML principal
+//Servir la página HTML principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -55,6 +55,7 @@ app.get('/ver-registros/:id', async (req, res) => {
         console.error('Error al obtener la materia:', error);
         res.status(500).json({ error: 'Error al obtener la materia' });
     }
+
 });
 
     // Manejar el registro de materias (POST)

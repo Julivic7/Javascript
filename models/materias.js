@@ -18,8 +18,8 @@ const Materia = sequelize.define('Materia', {
         allowNull: false,
     }
 }, {
-    tableName: 'materias', // Nombre de la tabla en la base de datos
-    timestamps: false, // Si no deseas campos de timestamp
+    tableName: 'materias', 
+    timestamps: false,
 });
 
 module.exports = Materia;
