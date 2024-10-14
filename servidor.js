@@ -76,4 +76,19 @@ app.delete('/eliminar-registro/:id', async (req, res) => {
     }
 });
 
+// Eliminar todas las materias
+app.delete('/eliminar-registros', async (req, res) => {
+    try {
+        await Materia.destroy({ where: {}, truncate: true });
+        res.json({ message: 'Todas las materias han sido eliminadas' });
+    } catch (error) {
+        console.error('Error al eliminar todas las materias:', error);
+        res.status(500).json({ error: 'Error al eliminar todas las materias' });
+    }
+});
+
+// Iniciar el servidor
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
 
