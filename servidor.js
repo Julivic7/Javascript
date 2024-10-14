@@ -58,69 +58,22 @@ app.get('/ver-registros/:id', async (req, res) => {
 
 });
 
-    // Manejar el registro de materias (POST)
-    else if (req.method === 'POST' && parsedUrl.pathname === '/agregar-registro') {
-        let body = '';
+    // Eliminar una materia por ID
+app.delete('/eliminar-registro/:id', async (req, res) => {
+    const { id } = req.params;
 
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-
-        req.on('end', () => {
-            try {
-                const parsedBody = JSON.parse(body);
-
-                // Validación de datos
-                if (!parsedBody.nombre || !parsedBody.cantidadAlumnos) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Faltan datos' }));
-                    return;
-                }
-
-                // Crear una nueva entrada de materia con un ID único
-                const nuevaMateria = {
-                    id: materias.length + 1, 
-                    nombre: parsedBody.nombre,
-                    cantidadAlumnos: parsedBody.cantidadAlumnos
-                };
-
-                // Agregar la materia a la lista
-                materias.push(nuevaMateria);
-
-                res.writeHead(201, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(nuevaMateria));
-
-            } catch (error) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Datos inválidos' }));
-            }
-        });
-
-    // Eliminar todas las materias (DELETE)
-    } else if (req.method === 'DELETE' && parsedUrl.pathname === '/eliminar-registros') {
-        materias = []; // Vaciar la lista de materias
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Todas las materias han sido eliminadas' }));
-
-    // Eliminar una materia en particular (DELETE/id)
-    } else if (req.method === 'DELETE' && parsedUrl.pathname.startsWith('/eliminar-registro/') && id) {
-        const materiaIndex = materias.findIndex(m => m.id === parseInt(id));
-        if (materiaIndex !== -1) {
-            materias.splice(materiaIndex, 1); // Eliminar la materia de la lista
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: `Materia con id ${id} eliminada` }));
-        } else {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Materia no encontrada' }));
+    try {
+        const materia = await Materia.findByPk(id);
+        if (!materia) {
+            return res.status(404).json({ error: 'Materia no encontrada' });
         }
 
-    } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not Found');
+        await materia.destroy();
+        res.json({ message: `Materia con id ${id} eliminada` });
+    } catch (error) {
+        console.error('Error al eliminar la materia:', error);
+        res.status(500).json({ error: 'Error al eliminar la materia' });
     }
 });
 
-const port = 5500;
-server.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`);
-});
+
