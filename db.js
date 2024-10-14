@@ -1,8 +1,8 @@
 // database.js
 const { Sequelize } = require('sequelize');
 
-// Configurar la conexión a la base de datos
 const sequelize = new Sequelize('js.jasarevicsotomayor', 'root', '1234', {
+
     host: 'localhost',
     dialect: 'mysql'
 });

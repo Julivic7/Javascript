@@ -1,6 +1,7 @@
 // models/materia.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // Asegúrate de que la ruta sea correcta
+
+const sequelize = require('../db'); 
 
 const Materia = sequelize.define('Materia', {
     id: {
