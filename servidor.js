@@ -1,132 +1,116 @@
-// server.js
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const Materia = require('./models/materias');
-const sequelize = require('./db'); // Asegúrate de que la ruta sea correcta
+const http = require('http');
+const url = require('url');
+const fs = require('fs');
 const path = require('path');
 
-const app = express();
-const PORT = 5500;
+let materias = []; // Lista para almacenar las materias
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Asegúrate de que 'public' contenga tu index.html y otros archivos estáticos
+const server = http.createServer((req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// Sincronizar la base de datos
-sequelize.sync()
-    .then(() => {
-        console.log('Base de datos sincronizada.');
-    })
-    .catch(err => {
-        console.error('Error al sincronizar la base de datos:', err);
-    });
+    const parsedUrl = url.parse(req.url, true);
+    const id = parsedUrl.pathname.split('/')[2]; // Extrae el ID de la URL si está presente
 
-// Rutas
-
-// Servir la página HTML principal
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Obtener todas las materias
-app.get('/ver-registros', async (req, res) => {
-    try {
-        const materias = await Materia.findAll();
-        res.json(materias);
-    } catch (error) {
-        console.error('Error al obtener materias:', error);
-        res.status(500).json({ error: 'Error al obtener materias' });
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
     }
-});
 
-// Obtener una materia por ID
-app.get('/ver-registros/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const materia = await Materia.findByPk(id);
+    // Servir la página HTML principal
+    if (req.method === 'GET' && parsedUrl.pathname === '/') {
+        const filePath = path.join(__dirname, 'index.html');
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Error al cargar la página');
+            } else {
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(data);
+            }
+        });
+
+    // Obtener el listado de todas las materias
+    } else if (req.method === 'GET' && parsedUrl.pathname === '/ver-registros') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(materias));
+
+    // Obtener información de una materia en particular (GET/id)
+    } else if (req.method === 'GET' && parsedUrl.pathname.startsWith('/ver-registros/') && id) {
+        const materia = materias.find(m => m.id === parseInt(id));
         if (materia) {
-            res.json(materia);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(materia));
         } else {
-            res.status(404).json({ error: 'Materia no encontrada' });
-        }
-    } catch (error) {
-        console.error('Error al obtener la materia:', error);
-        res.status(500).json({ error: 'Error al obtener la materia' });
-    }
-});
-
-// Crear una nueva materia
-app.post('/agregar-registro', async (req, res) => {
-    const { nombre, cantidadAlumnos } = req.body;
-
-    // Validación de datos
-    if (!nombre || !cantidadAlumnos) {
-        return res.status(400).json({ error: 'Faltan datos' });
-    }
-
-    try {
-        const nuevaMateria = await Materia.create({ nombre, cantidadAlumnos });
-        res.status(201).json(nuevaMateria);
-    } catch (error) {
-        console.error('Error al crear la materia:', error);
-        res.status(500).json({ error: 'Error al crear la materia' });
-    }
-});
-
-// Actualizar una materia por ID
-app.put('/actualizar-registro/:id', async (req, res) => {
-    const { id } = req.params;
-    const { nombre, cantidadAlumnos } = req.body;
-
-    try {
-        const materia = await Materia.findByPk(id);
-        if (!materia) {
-            return res.status(404).json({ error: 'Materia no encontrada' });
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Materia no encontrada' }));
         }
 
-        materia.nombre = nombre || materia.nombre;
-        materia.cantidadAlumnos = cantidadAlumnos || materia.cantidadAlumnos;
+    // Manejar el registro de materias (POST)
+    } else if (req.method === 'POST' && parsedUrl.pathname === '/agregar-registro') {
+        let body = '';
 
-        await materia.save();
-        res.json(materia);
-    } catch (error) {
-        console.error('Error al actualizar la materia:', error);
-        res.status(500).json({ error: 'Error al actualizar la materia' });
-    }
-});
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
 
-// Eliminar una materia por ID
-app.delete('/eliminar-registro/:id', async (req, res) => {
-    const { id } = req.params;
+        req.on('end', () => {
+            try {
+                const parsedBody = JSON.parse(body);
 
-    try {
-        const materia = await Materia.findByPk(id);
-        if (!materia) {
-            return res.status(404).json({ error: 'Materia no encontrada' });
+                // Validación de datos
+                if (!parsedBody.nombre || !parsedBody.cantidadAlumnos) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Faltan datos' }));
+                    return;
+                }
+
+                // Crear una nueva entrada de materia con un ID único
+                const nuevaMateria = {
+                    id: materias.length + 1, // Generar ID automáticamente
+                    nombre: parsedBody.nombre,
+                    cantidadAlumnos: parsedBody.cantidadAlumnos
+                };
+
+                // Agregar la materia a la lista
+                materias.push(nuevaMateria);
+
+                res.writeHead(201, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(nuevaMateria));
+
+            } catch (error) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Datos inválidos' }));
+            }
+        });
+
+    // Eliminar todas las materias (DELETE)
+    } else if (req.method === 'DELETE' && parsedUrl.pathname === '/eliminar-registros') {
+        materias = []; // Vaciar la lista de materias
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Todas las materias han sido eliminadas' }));
+
+    // Eliminar una materia en particular (DELETE/id)
+    } else if (req.method === 'DELETE' && parsedUrl.pathname.startsWith('/eliminar-registro/') && id) {
+        const materiaIndex = materias.findIndex(m => m.id === parseInt(id));
+        if (materiaIndex !== -1) {
+            materias.splice(materiaIndex, 1); // Eliminar la materia de la lista
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: `Materia con id ${id} eliminada` }));
+        } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Materia no encontrada' }));
         }
 
-        await materia.destroy();
-        res.json({ message: `Materia con id ${id} eliminada` });
-    } catch (error) {
-        console.error('Error al eliminar la materia:', error);
-        res.status(500).json({ error: 'Error al eliminar la materia' });
+    } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not Found');
     }
 });
 
-// Eliminar todas las materias
-app.delete('/eliminar-registros', async (req, res) => {
-    try {
-        await Materia.destroy({ where: {}, truncate: true });
-        res.json({ message: 'Todas las materias han sido eliminadas' });
-    } catch (error) {
-        console.error('Error al eliminar todas las materias:', error);
-        res.status(500).json({ error: 'Error al eliminar todas las materias' });
-    }
-});
-
-// Iniciar el servidor
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+const port = 5500;
+server.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`);
 });

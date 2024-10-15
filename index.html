@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materias del Istic</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <h1>Materias del Istic by Jasa</h1>
+
+    <form id="materiasIstic">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" placeholder="Ingrese el nombre de la materia" required>
+        <br><br>
+
+        <label for="cantidadAlumnos">Cantidad de Alumnos:</label>
+        <input type="number" id="cantidadAlumnos" name="cantidadAlumnos" placeholder="Ingrese cantidad de Alumnos" required>
+        <br><br>
+
+        <button type="submit">Enviar</button>
+    </form>
+
+    <h2>Materias Cargadas</h2>
+    <table border="1" id="tablaMaterias">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Cantidad de Alumnos</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <br>
+    <button id="eliminarTodo">Eliminar todas las materias</button>
+
+    <script>
+        document.getElementById('materiasIstic').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const cantidadAlumnos = document.getElementById('cantidadAlumnos').value;
+
+            fetch('http://localhost:5500/agregar-registro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: nombre,
+                    cantidadAlumnos: cantidadAlumnos
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Éxito:', data);
+                alert(`Materia añadida: ${data.nombre}, Alumnos: ${data.cantidadAlumnos}`);
+                document.getElementById('materiasIstic').reset();
+                cargarMaterias();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        // Función para cargar las materias y mostrarlas en la tabla
+        function cargarMaterias() {
+            fetch('http://localhost:5500/ver-registros')
+                .then(response => response.json())
+                .then(materias => {
+                    const tbody = document.getElementById('tablaMaterias').querySelector('tbody');
+                    tbody.innerHTML = ''; // Limpiar la tabla
+                    materias.forEach(materia => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${materia.nombre}</td>
+                            <td>${materia.cantidadAlumnos}</td>
+                            <td><button onclick="eliminarMateria(${materia.id})">Eliminar</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar materias:', error);
+                });
+        }
+
+        // Función para eliminar una materia por ID
+        function eliminarMateria(id) {
+            fetch(`http://localhost:5500/eliminar-registro/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                cargarMaterias(); // Recargar las materias
+            })
+            .catch(error => {
+                console.error('Error al eliminar materia:', error);
+            });
+        }
+
+        // Botón para eliminar todas las materias
+        document.getElementById('eliminarTodo').addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que deseas eliminar todas las materias?')) {
+                fetch('http://localhost:5500/eliminar-registros', {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    cargarMaterias(); // Recargar las materias
+                })
+                .catch(error => {
+                    console.error('Error al eliminar todas las materias:', error);
+                });
+            }
+        });
+
+        // Cargar las materias cuando se carga la página
+        window.onload = cargarMaterias;
+    </script>
+
+</body>
+</html>
