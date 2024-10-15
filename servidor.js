@@ -55,49 +55,10 @@ app.get('/ver-registros/:id', async (req, res) => {
         console.error('Error al obtener la materia:', error);
         res.status(500).json({ error: 'Error al obtener la materia' });
     }
+
 });
 
-// Crear una nueva materia
-app.post('/agregar-registro', async (req, res) => {
-    const { nombre, cantidadAlumnos } = req.body;
-
-    // Validación de datos
-    if (!nombre || !cantidadAlumnos) {
-        return res.status(400).json({ error: 'Faltan datos' });
-    }
-
-    try {
-        const nuevaMateria = await Materia.create({ nombre, cantidadAlumnos });
-        res.status(201).json(nuevaMateria);
-    } catch (error) {
-        console.error('Error al crear la materia:', error);
-        res.status(500).json({ error: 'Error al crear la materia' });
-    }
-});
-
-// Actualizar una materia por ID
-app.put('/actualizar-registro/:id', async (req, res) => {
-    const { id } = req.params;
-    const { nombre, cantidadAlumnos } = req.body;
-
-    try {
-        const materia = await Materia.findByPk(id);
-        if (!materia) {
-            return res.status(404).json({ error: 'Materia no encontrada' });
-        }
-
-        materia.nombre = nombre || materia.nombre;
-        materia.cantidadAlumnos = cantidadAlumnos || materia.cantidadAlumnos;
-
-        await materia.save();
-        res.json(materia);
-    } catch (error) {
-        console.error('Error al actualizar la materia:', error);
-        res.status(500).json({ error: 'Error al actualizar la materia' });
-    }
-});
-
-// Eliminar una materia por ID
+    // Eliminar una materia por ID
 app.delete('/eliminar-registro/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -130,3 +91,4 @@ app.delete('/eliminar-registros', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
