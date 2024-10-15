@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const Materia = require('./models/materias');
-const sequelize = require('./db'); // Asegúrate de que la ruta sea correcta
+const sequelize = require('./db');
 const path = require('path');
 
 const app = express();
@@ -12,7 +12,7 @@ const PORT = 5500;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Asegúrate de que 'public' contenga tu index.html y otros archivos estáticos
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Sincronizar la base de datos
 sequelize.sync()
